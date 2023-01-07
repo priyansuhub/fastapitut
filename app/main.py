@@ -3,6 +3,17 @@ from fastapi import  FastAPI,Response,status, HTTPException
 from fastapi.params import Body
 from pydantic import BaseModel
 
+import mysql.connector
+
+try:
+    cnx = mysql.connector.connect(user='root', host='localhost', database='alt')
+    cursor = cnx.cursor()
+    print("connection successful")
+except Exception as error:
+    print("connection to database failed")
+
+
+
 app = FastAPI()
 counter = 1
 
@@ -37,7 +48,23 @@ async def root():
 
 @app.get("/posts")
 def get_posts():
-    return {"data": my_posts}
+    cursor.execute("""SELECT * FROM mytable""")
+    a = []
+    b = {}
+    key1 = "id"
+    key2 = "title"
+    key3 = "content"
+    key4 = "published"
+    key5 = "created_at"     
+    for row in cursor:
+        b[key1] = row[0]
+        b[key2] = row[1]
+        b[key3] = row[2]
+        b[key4] = row[3]
+        b[key5] = row[4]
+        a.append(dict(b))
+    print(a)
+    return {"data": a}
 
 @app.post("/posts")
 def create_posts(new_post: Post):
