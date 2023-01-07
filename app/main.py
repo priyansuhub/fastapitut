@@ -18,13 +18,10 @@ app = FastAPI()
 counter = 1
 
 
-
 class Post(BaseModel):
-    id: Optional[int] = -1
     title: str
     content: str
-    publish: bool = True
-    rating: Optional[int]=None
+    published: bool = False
 
 class Data(BaseModel):
     title: str
@@ -68,37 +65,37 @@ def get_posts():
 
 @app.post("/posts")
 def create_posts(new_post: Post):
-    global counter 
-    counter+=1
-    post_dict = new_post.dict()
-    post_dict['id'] = counter
-    my_posts.append(post_dict)
-    return {"data":post_dict} 
+    cursor.execute("""INSERT INTO mytable(title, content) VALUES (%s, %s)""",(new_post.title,new_post.content))
+    new_post = cursor.fetchone()
+    cnx.commit()
+    return {"data": new_post}  
 
 @app.get("/posts/{id}")
-def get_post(id: int, response: Response):
-    data = ''
-    for p in my_posts:
-        print(p)
-        if(p['id'] == id):
-            data = p
-            return p
-    if data == '':
-        # response.status_code = status.HTTP_404_NOT_FOUND
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"JNL{id} not found")
+def get_post(id: int):
+    query = "SELECT * from mytable WHERE id = %s"
+    values = (id,)
+    cursor.execute(query, values)
+    test_post = cursor.fetchone()
+    print(test_post)
+    return test_post
+    #  data = ''
+    # for p in my_posts:
+    #     if(p['id'] == id):
+    #         data = p
+    #         return test_post
+    # if data == '':
+    #     # response.status_code = status.HTTP_404_NOT_FOUND
+    #     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"JNL{id} not found")
     
 @app.delete("/posts/{id}")
 def delete_data(id: int):
-    data = indexExtractionByid(id)
-    if(type(data).__name__ == "int"):
-        my_posts.pop(data)
-        raise HTTPException(status_code=status.HTTP_200_OK)
-    else:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{data}")
+    cursor.execute("""DELETE FROM mytable WHERE id = %s""", (str(id),))
+    
 
 
 @app.put("/posts/{id}")
 def update_post(id:int, post_data:Data):
+    cursor.execute("""UPDATE mytable SET title = %s, content =%s, published = %s""",(post_data.title,post_data.content))
     data = indexExtractionByid(id)
     if(type(data).__name__ == "int"):
         #convert post_data to a dictionaly
@@ -110,5 +107,4 @@ def update_post(id:int, post_data:Data):
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{data}")
     
-
 #title str, content str, category
