@@ -3,14 +3,15 @@ from fastapi import  FastAPI,Response,status, HTTPException,Depends
 from fastapi.params import Body
 from pydantic import BaseModel
 import mysql.connector
+from . import schemas
 from . import models
+from . import utils
 from .database import engine, get_db
-from sqlalchemy.orm import Session
+from .routers import post,user
 
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
+app.include_router(post.router)
+app.include_router(user.router)
 
 
-@app.get("/")
-def test_posts(db: Session = Depends(get_db)):
-    return {"status":"Dala"}
