@@ -1,6 +1,7 @@
+from typing import List
 from .. import schemas
 from .. import models
-from .. import utils
+from .. import utils,Oauth2
 from fastapi import  APIRouter, FastAPI,Response,status, HTTPException,Depends
 from sqlalchemy.orm import Session
 from ..database import engine, get_db
@@ -13,13 +14,14 @@ class Post(BaseModel):
     content: str
     published: bool = False
 
-@router.get("/")
+@router.get("/", response_model=List[schemas.TestUser])
 def test_posts(db: Session = Depends(get_db)):
     posts = db.query(models.Post).all()
     return {"status":posts}
 
 @router.post("/posts")
-def post_data(post:Post ,db: Session = Depends(get_db)):
+def post_data(post:Post ,db: Session = Depends(get_db),user_id:int = Depends(Oauth2.get_current_user)):
+    print(user_id)
     newPost = models.Post(**post.dict())
     db.add(newPost)
     db.commit()
@@ -27,8 +29,9 @@ def post_data(post:Post ,db: Session = Depends(get_db)):
     return {"data": newPost}
 
 @router.get("/posts/{id}")
-def get_post_by_id(id:int,db: Session = Depends(get_db)):
+def get_post_by_id(id:int,db: Session = Depends(get_db), current_user: int = Depends(Oauth2.get_current_user)):
     posts = db.query(models.Post).filter(models.Post.id == id).first()
+    print(current_user)
     return posts
 
 @router.delete("/posts/{id}")
