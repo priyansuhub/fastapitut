@@ -16,6 +16,6 @@ def login(user_credentials:OAuth2PasswordRequestForm = Depends() ,db: Session = 
     if not utils.compareHash(user_credentials.password, user.password):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid Email or Password")
 
-    access_token = Oauth2.create_access_token(data = {"user_id": user.id, "role":"USER"})
-
+    access_token = Oauth2.create_access_token(data = {"user_id": user.id, "role":user.role})
+    
     return {"access_token": access_token, "token_type": "bearer"}

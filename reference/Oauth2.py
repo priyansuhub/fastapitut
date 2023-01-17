@@ -39,3 +39,11 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     token = verify_access_token(token, credentials_exception)
     user = db.query(models.User).filter(models.User.id == token.id).first()
     return user
+
+def authorized_by_role(token: str = Depends(oauth2_scheme), db: Session = Depends(database.get_db)):
+    data = get_current_user(token, db)
+    if(data.role == token.role):
+        return "Authorized"
+    else:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Could Not validate",headers={"WWW-Authenticate":"Bearer"})
+

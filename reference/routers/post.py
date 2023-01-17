@@ -14,10 +14,11 @@ class Post(BaseModel):
     content: str
     published: bool = False
 
+
 @router.get("/", response_model=List[schemas.TestUser])
 def test_posts(db: Session = Depends(get_db)):
     posts = db.query(models.Post).all()
-    return {"status":posts}
+    return {"status": posts}
 
 @router.post("/posts")
 def post_data(post:Post ,db: Session = Depends(get_db),user_id:int = Depends(Oauth2.get_current_user)):
